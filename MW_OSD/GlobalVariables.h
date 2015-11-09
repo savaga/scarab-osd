@@ -27,7 +27,7 @@
 
 // DEFINE CONFIGURATION MENU PAGES
 #define MINPAGE 0
-#define MAXPAGE 9
+#define MAXPAGE 10
 
 #define PIDITEMS 10
 
@@ -246,6 +246,9 @@ enum Setting_ {
   S_CS7,
   S_CS8,
   S_CS9,
+#if defined(VTX_CONTROL)
+  S_VTX_CHANNEL,
+#endif
   // EEPROM_SETTINGS must be last!
   EEPROM_SETTINGS
 };
@@ -336,7 +339,9 @@ MWOSDVER,   // used for check              0
 0,   // S_CS7,
 0,   // S_CS8,
 0,   // S_CS9,
-
+#if defined(VTX_CONTROL)
+0,   // S_VTX_CHANNEL,
+#endif
 };
 
 uint16_t SCREENLAYOUT_DEFAULT[EEPROM_SETTINGS] = {
@@ -378,7 +383,9 @@ uint16_t SCREENLAYOUT_DEFAULT[EEPROM_SETTINGS] = {
 (LINE02+22)|DISPLAY_NEVER,   // MapModePosition
 (LINE07+15)|DISPLAY_NEVER,   // MapCenterPosition
 (LINE04+10)|DISPLAY_ALWAYS,   // APstatusPosition
-
+#if defined(VTX_CONTROL)
+(LINE03+2)|DISPLAY_ALWAYS,    // VTX Freq and channel
+#endif
 };
 
 
@@ -421,7 +428,9 @@ uint16_t SCREENLAYOUT_DEFAULT_OSDSW[EEPROM_SETTINGS] = {
 (LINE02+22)|DISPLAY_NEVER,   // MapModePosition
 (LINE07+17)|DISPLAY_NEVER,   // MapCenterPosition
 (LINE04+10)|DISPLAY_NEVER,   // APstatusPosition
-
+#if defined(VTX_CONTROL)
+(LINE03+2)|DISPLAY_ALWAYS,   // VTX freq and channel
+#endif
 };
 
 /*
@@ -491,7 +500,11 @@ static uint16_t MwRcData[8]={   // This hold receiver pulse signal
 
 // for analogue / PWM sensor filtering 
 #define SENSORFILTERSIZE 8
-#define SENSORTOTAL 5
+#if defined(VTX_CONTROL)
+    #define SENSORTOTAL 1
+#else
+    #define SENSORTOTAL 5
+#endif
 int16_t sensorfilter[SENSORTOTAL][SENSORFILTERSIZE+2]; 
 
 uint16_t  MwSensorPresent=0;
@@ -522,6 +535,9 @@ uint8_t GPS_waypoint_step=0;
 uint16_t pMeterSum=0;
 uint16_t MwRssi=0;
 uint32_t GPS_time = 0;        //local time of coord calc - haydent
+#if defined(VTX_CONTROL)
+uint8_t vtx_channel = 0;
+#endif
 
 uint8_t MvVBatMinCellVoltage=CELL_VOLTS_MIN;
 uint8_t MvVBatMaxCellVoltage=CELL_VOLTS_MAX;
@@ -832,6 +848,19 @@ const char configMsg94[] PROGMEM = "TIMER";
 const char configMsg95[] PROGMEM = "MAH X100";
 const char configMsg96[] PROGMEM = "AMPS";
 
+#if defined(VTX_CONTROL)
+//-----------------------------------------------------------Page10
+const char configMsg100[] PROGMEM = "VTX";
+const char configMsg101[] PROGMEM = "CHANNEL";
+const char configMsg102[] PROGMEM = "BAND";
+const char configMsg103[] PROGMEM = "FREQUENCY";
+const char configMsg104[] PROGMEM = "BOSCAM A";
+const char configMsg105[] PROGMEM = "BOSCAM B";
+const char configMsg106[] PROGMEM = "BOSCAM E";
+const char configMsg107[] PROGMEM = "FATSHARK";
+const char configMsg108[] PROGMEM = "RACEBAND";
+#endif
+
 
 // POSITION OF EACH CHARACTER OR LOGO IN THE MAX7456
 const unsigned char speedUnitAdd[2] ={
@@ -888,6 +917,9 @@ enum Positions {
   MapModePosition,
   MapCenterPosition,
   APstatusPosition,
+#if defined(VTX_CONTROL)
+  VtxChannelPosition,
+#endif
   POSITIONS_SETTINGS
 };
 
@@ -1037,6 +1069,29 @@ const PROGMEM char * const menu_alarm_item[] =
   configMsg96,
 };
 
+#if defined(VTX_CONTROL)
+const PROGMEM char * const menu_vtx[] =
+{
+  configMsg101,
+  configMsg102,
+  configMsg103,
+  configMsg104,
+  configMsg105,
+  configMsg106,
+  configMsg107,
+  configMsg108,
+};
+
+uint16_t vtx_freq[] =
+{
+    5865, 5845, 5825, 5805, 5785, 5765, 5745, 5725,
+    5733, 5752, 5771, 5790, 5809, 5828, 5847, 5866,
+    5705, 5685, 5665, 5645, 5885, 5905, 5925, 5945,
+    5740, 5760, 5780, 5800, 5820, 5840, 5860, 5880,
+    5658, 5695, 5732, 5769, 5806, 5843, 5880, 5917,
+};
+#endif
+
 const PROGMEM char * const menutitle_item[] = 
 {   
   configMsg00,
@@ -1049,6 +1104,9 @@ const PROGMEM char * const menutitle_item[] =
   configMsg70,
   configMsg80,
   configMsg90,
+#if defined(VTX_CONTROL)
+  configMsg100,
+#endif
 };
 
 const PROGMEM char * const menu_on_off[] = 
@@ -1056,5 +1114,4 @@ const PROGMEM char * const menu_on_off[] =
   configMsgOFF,
   configMsgON,
 };
-
 

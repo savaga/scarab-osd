@@ -99,7 +99,9 @@
 #define PAGE7 //ADVANCED
 #define PAGE8 //GPS TIME
 #define PAGE9 //ALARMS
-
+#if defined (VTX_CONTROL)
+    #define PAGE10 //VTX
+#endif
 
 /********************  HARDWARE PINS definitions  *********************/
 #define AMPERAGEPIN   A1

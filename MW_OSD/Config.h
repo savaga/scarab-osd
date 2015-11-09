@@ -241,4 +241,7 @@
 #define TEMP_ZERO 0                 // Temperature Zero calibration (range = 0-1024 :512 = 2.5v with vref of 5v and 0.55v for vref of 1.1v) 
 #define TEMP_CAL 0                  // Temperature calibration value (range = 0-1024 :512 = 0.5v with vref of 5v and 0.55v for vref of 1.1v) 
 
+/********************  VTX Control ***********************/
+// I'm using A1, A2, A3 pins to connect to vtx spi bus. You probably need to remove resistor dividers from VidBatt, Amperage Sensor and RSSI imputs
+//#define VTX_CONTROL                 // Enable if you want to control vtx RTC6705 channel selection
 

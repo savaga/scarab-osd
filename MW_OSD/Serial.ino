@@ -724,6 +724,24 @@ void serialMenuCommon()
 	  if(ROW==6) Settings[S_AMPERAGE_ALARM]=Settings[S_AMPERAGE_ALARM]+menudir;
 	}
 #endif
+#ifdef PAGE10
+  if(configPage == 10 && COL == 2) {
+    if(ROW==1) {
+      uint8_t channel = Settings[S_VTX_CHANNEL] % 8;
+      if (menudir == 1 && channel < 7)
+        Settings[S_VTX_CHANNEL]++;
+      if (menudir == -1 && channel > 0)
+        Settings[S_VTX_CHANNEL]--;
+    }
+    if(ROW==2) {
+      uint8_t band = Settings[S_VTX_CHANNEL] / 8;
+      if (menudir == 1 && band < 4)
+        Settings[S_VTX_CHANNEL] += 8;
+      if (menudir == -1 && band > 0)
+        Settings[S_VTX_CHANNEL] -= 8;
+    }
+  }
+#endif
   	if((ROW==10)&&(COL==1)) configExit();
 	if((ROW==10)&&(COL==2)) configSave();
 }
@@ -823,6 +841,9 @@ void configExit()
     ampMAX=0;
     flyingTime=0;
   }
+#if defined(VTX_CONTROL)
+    Settings[S_VTX_CHANNEL] = vtx_channel;
+#endif
   setMspRequests();
 }
 
@@ -882,7 +903,11 @@ void configSave()
   }
   mspWriteChecksum();
 #endif
-
+#if defined(VTX_CONTROL)
+  if(vtx_channel != Settings[S_VTX_CHANNEL]) {
+    SPI_set_vtx_channel((vtx_channel = Settings[S_VTX_CHANNEL]));
+  }
+#endif
   writeEEPROM();
   mspWriteRequest(MSP_EEPROM_WRITE,0);
   configExit();

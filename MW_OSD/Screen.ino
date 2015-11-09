@@ -149,6 +149,15 @@ uint8_t fieldIsVisible(uint8_t pos) {
 */
 }
 
+#if defined(VTX_CONTROL)
+void displayVtxChannel(void) {
+  if(!fieldIsVisible(VtxChannelPosition))
+    return;
+
+  itoa(vtx_freq[vtx_channel], screenBuffer, 10);
+  MAX7456_WriteString(screenBuffer,getPosition(VtxChannelPosition));
+}
+#endif
 
 void displayTemperature(void)        // DEPRECATED RUSHDUINO SUPPORT
 {
@@ -1103,6 +1112,15 @@ void displayCursor(void)
        cursorpos=(ROW+2)*30+10+6+6;
       }
 #endif     
+#ifdef PAGE10
+    if(configPage==10)
+      {
+      COL=2;
+      if (ROW==9) ROW=2;
+      if (ROW==3) ROW=10;
+       cursorpos=(ROW+2)*30+4+6+6;
+      }
+#endif
   }
   if(timer.Blink10hz)
     screen[cursorpos] = SYM_CURSOR;
@@ -1397,7 +1415,21 @@ void displayConfigScreen(void)
     }
 #else
     if(configPage == 9)configPage+=menudir;
-#endif  
+#endif
+#ifdef PAGE10
+    if(configPage==10){
+        for(uint8_t X=0; X<3; X++) {
+            strcpy_P(screenBuffer, (char*)pgm_read_word(&(menu_vtx[X])));
+            MAX7456_WriteString(screenBuffer, ROLLT+ (X*LINE));
+        }
+        MAX7456_WriteString(itoa((Settings[S_VTX_CHANNEL] % 8) + 1,screenBuffer,10), ROLLI);
+        strcpy_P(screenBuffer, (char*)pgm_read_word(&(menu_vtx[Settings[S_VTX_CHANNEL]/8 + 3])));
+        MAX7456_WriteString(screenBuffer, ROLLI + LINE);
+        MAX7456_WriteString(itoa(vtx_freq[Settings[S_VTX_CHANNEL]],screenBuffer,10), ROLLI + 2*LINE);
+    }
+#else
+    if(configPage == 10)configPage+=menudir;
+#endif
     if(configPage > MAXPAGE)configPage=MINPAGE;
 
   displayCursor();

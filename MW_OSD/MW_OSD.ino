@@ -106,7 +106,15 @@ boolean ledstatus=HIGH;
 //uint8_t Settings[1];
 #endif
 
+#if defined(VTX_CONTROL)
+    #define SPIDATA VIDVOLTAGEPIN
+    #define SPICLK  AMPERAGEPIN
+    #define SPILE   RSSIPIN
 
+    #define DATAPIN (1<<2)
+    #define CLKPIN  (1<<1)
+    #define LEPIN   (1<<3)
+#endif
 
 //------------------------------------------------------------------------
 void setup()
@@ -133,7 +141,15 @@ void setup()
 #endif  
   checkEEPROM();
   readEEPROM();
-  
+
+#if defined(VTX_CONTROL)
+  DDRC  |= (DATAPIN | CLKPIN | LEPIN);
+  PORTC |= (LEPIN);
+  PORTC &= ~(CLKPIN);
+
+  SPI_set_vtx_channel(vtx_channel = Settings[S_VTX_CHANNEL]);
+#endif
+
   #ifndef STARTUPDELAY
     #define STARTUPDELAY 1000
   #endif
@@ -412,6 +428,9 @@ void loop()
         displayTime();
 #ifdef TEMPSENSOR
         if(((temperature<Settings[TEMPERATUREMAX])||(timer.Blink2hz))) displayTemperature();
+#endif
+#if defined(VTX_CONTROL)
+        displayVtxChannel();
 #endif
         displayArmed();
         if (Settings[S_THROTTLEPOSITION])
@@ -1093,3 +1112,60 @@ void useairspeed(){
   GPS_speed = 27.7777 * sqrt(airspeedsensor * airspeed_cal); // Need in cm/s for this
 }
 #endif //USE_AIRSPEED_SENSOR 
+
+#if defined(VTX_CONTROL)
+void SPI_write_register(uint8_t addr, uint32_t data) {
+    uint8_t i;
+
+    PORTC &= ~(LEPIN);
+    _delay_us(1);
+    // send address
+    for (i=0; i<4; i++) {
+        if ((addr >> i) & 1)
+            PORTC |= DATAPIN;
+        else
+            PORTC &= ~DATAPIN;
+
+        PORTC |= CLKPIN;
+        _delay_us(1);
+        PORTC &= ~CLKPIN;
+        _delay_us(1);
+    }
+    // Write bit
+
+    PORTC |= DATAPIN;
+    PORTC |= CLKPIN;
+    _delay_us(1);
+    PORTC &= ~(CLKPIN);
+    _delay_us(1);
+    for (i=0; i<20; i++) {
+        if ((data >> i) & 1)
+            PORTC |= DATAPIN;
+        else
+            PORTC &= ~DATAPIN;
+        PORTC |= CLKPIN;
+        _delay_us(1);
+        PORTC &= ~CLKPIN;
+        _delay_us(1);
+    }
+
+    digitalWrite(SPILE, HIGH);
+}
+
+
+void SPI_set_vtx_channel(uint8_t channel) {
+
+    uint32_t freq = (uint32_t)vtx_freq[channel] * 1000;
+    uint32_t N, A;
+
+    DDRC |= (DATAPIN | CLKPIN | LEPIN);
+    PORTC |= (LEPIN);
+    PORTC &= ~(CLKPIN);
+
+    freq /= 40; // TODO check all channels for the R value
+    N = freq / 64;
+    A = freq % 64;
+    SPI_write_register(0, 400);
+    SPI_write_register(1, (N << 7) | A);
+}
+#endif
